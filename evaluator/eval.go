@@ -24,6 +24,18 @@ type Response struct {
 	Headers    map[string]string `json:"headers"`
 }
 
-func Evaluate(w http.ResponseWriter, r *http.Request, eval []Evaluator) {
+func Evaluate(w http.ResponseWriter, r *http.Request, evals []Evaluator) {
+	for _, eval := range evals {
+		if eval.match(r) {
+			eval.constructResponse(w)
+		}
+	}
+}
+
+func (e Evaluator) match(r *http.Request) bool {
+	return false
+}
+
+func (e Evaluator) constructResponse(w http.ResponseWriter) {
 
 }

@@ -98,7 +98,7 @@ func LoadMockConfig(path string) {
 		{
 			Method:   "GET",
 			Endpoint: "/users",
-			Evaluator: []evaluator.Evaluator{
+			Evaluators: []evaluator.Evaluator{
 				{
 					Response: evaluator.Response{
 						Label:      "success",

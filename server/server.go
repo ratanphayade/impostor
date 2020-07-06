@@ -16,9 +16,9 @@ type App struct {
 }
 
 type Route struct {
-	Method    string                `json:"method"`
-	Endpoint  string                `json:"endpoint"`
-	Evaluator []evaluator.Evaluator `json:"evaluator"`
+	Method     string                `json:"method"`
+	Endpoint   string                `json:"endpoint"`
+	Evaluators []evaluator.Evaluator `json:"evaluators"`
 }
 
 type server struct {
@@ -57,13 +57,13 @@ func (s *server) Run() *server {
 
 func (s *server) AttachHandlers(routes []Route) *server {
 	for _, r := range routes {
-		s.mux.HandleFunc(r.Endpoint, handler(r.Evaluator)).Methods(r.Method)
+		s.mux.HandleFunc(r.Endpoint, handler(r.Evaluators)).Methods(r.Method)
 	}
 	return s
 }
 
-func handler(eval []evaluator.Evaluator) func(w http.ResponseWriter, r *http.Request) {
+func handler(evals []evaluator.Evaluator) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		evaluator.Evaluate(w, r, eval)
+		evaluator.Evaluate(w, r, evals)
 	}
 }

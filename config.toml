@@ -1,5 +1,5 @@
 [apps]
-    [apps.settlement]
+    [apps.settlements]
         port = 9010
         host = "localhost"
 
