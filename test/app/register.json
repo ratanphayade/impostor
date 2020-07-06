@@ -14,9 +14,9 @@
         },
         "rules": [
           {
-           "target":"header",
-           "modifier":"Id",
-           "value": "1"
+           "target": "body",
+           "modifier": "id",
+           "value": "true"
           }
         ]
       }

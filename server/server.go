@@ -8,7 +8,25 @@ import (
 
 	"github.com/ratanphayade/imposter/evaluator"
 
+	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
+)
+
+var (
+	defaultCORSMethods = []string{
+		http.MethodGet,
+		http.MethodHead,
+		http.MethodPost,
+		http.MethodPut,
+		http.MethodOptions,
+		http.MethodDelete,
+		http.MethodPatch,
+		http.MethodTrace,
+		http.MethodConnect}
+
+	defaultCORSHeaders = []string{"X-Requested-With", "Content-Type", "Authorization"}
+
+	defaultCORSExposedHeaders = []string{"Cache-Control", "Content-Language", "Content-Type", "Expires", "Last-Modified", "Pragma"}
 )
 
 type App struct {
@@ -19,8 +37,17 @@ type App struct {
 
 // Mock Config
 type MockConfig struct {
-	Routes   []Route
-	NotFound evaluator.Response
+	Routes      []Route
+	NotFound    evaluator.Response
+	CORSOptions CORSOption
+}
+
+type CORSOption struct {
+	Methods          []string `json:"methods"`
+	Headers          []string `json:"headers"`
+	ExposedHeaders   []string `json:"exposed_headers"`
+	Origins          []string `json:"origins"`
+	AllowCredentials bool     `json:"allow_credentials"`
 }
 
 type Route struct {
@@ -30,11 +57,13 @@ type Route struct {
 }
 
 type server struct {
-	app App
-	mux *mux.Router
+	app        App
+	httpServer *http.Server
+	mux        *mux.Router
+	mock       MockConfig
 }
 
-func NewServer(cfg map[string]App, application string) *server {
+func NewServer(cfg map[string]App, application string, mock MockConfig) *server {
 	var (
 		listerConf App
 		ok         bool
@@ -45,34 +74,39 @@ func NewServer(cfg map[string]App, application string) *server {
 	}
 
 	return &server{
-		app: listerConf,
-		mux: mux.NewRouter(),
+		app:  listerConf,
+		mux:  mux.NewRouter(),
+		mock: mock,
 	}
 }
 
-func (s *server) Run() *server {
-	httpServer := http.Server{
-		Handler: s.mux,
-		Addr:    fmt.Sprintf("%s:%d", s.app.Host, s.app.Port),
-	}
-
-	if err := httpServer.ListenAndServe(); err != nil {
-		log.Fatal(err)
-	}
-
-	return s
-}
-
-func (s *server) AttachHandlers(mc MockConfig) *server {
-	for _, r := range mc.Routes {
-		s.mux.HandleFunc(r.Endpoint, handler(r.Evaluators, mc.NotFound)).
+func (s *server) AttachHandlers() *server {
+	for _, r := range s.mock.Routes {
+		s.mux.HandleFunc(r.Endpoint, handler(r.Evaluators, s.mock.NotFound)).
 			Methods(r.Method)
 	}
 
 	s.mux.NotFoundHandler = s.mux.NewRoute().
 		HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			http.Error(w, mc.NotFound.Body, http.StatusNotFound)
+			http.Error(w, s.mock.NotFound.Body, http.StatusNotFound)
 		}).GetHandler()
+
+	return s
+}
+
+func (s *server) refresh(route Route) {
+	// todo: refresh the route list available in the changed file
+}
+
+func (s *server) Run() *server {
+	s.httpServer = &http.Server{
+		Handler: handlers.CORS(collectCORSOptions(s.mock.CORSOptions)...)(s.mux),
+		Addr:    fmt.Sprintf("%s:%d", s.app.Host, s.app.Port),
+	}
+
+	if err := s.httpServer.ListenAndServe(); err != nil {
+		log.Fatal(err)
+	}
 
 	return s
 }
@@ -100,4 +134,36 @@ func writeResponse(w http.ResponseWriter, res evaluator.Response) {
 	w.WriteHeader(res.StatusCode)
 
 	time.Sleep(time.Duration(res.Latency) * time.Millisecond)
+}
+
+func collectCORSOptions(cors CORSOption) []handlers.CORSOption {
+	var h []handlers.CORSOption
+
+	if len(cors.Methods) > 0 {
+		h = append(h, handlers.AllowedMethods(cors.Methods))
+	} else {
+		h = append(h, handlers.AllowedMethods(defaultCORSMethods))
+	}
+
+	if len(cors.Origins) > 0 {
+		h = append(h, handlers.AllowedOrigins(cors.Origins))
+	}
+
+	if len(cors.Headers) > 0 {
+		h = append(h, handlers.AllowedHeaders(cors.Headers))
+	} else {
+		h = append(h, handlers.AllowedHeaders(defaultCORSHeaders))
+	}
+
+	if len(cors.ExposedHeaders) > 0 {
+		h = append(h, handlers.ExposedHeaders(cors.ExposedHeaders))
+	} else {
+		h = append(h, handlers.ExposedHeaders(defaultCORSExposedHeaders))
+	}
+
+	if cors.AllowCredentials {
+		h = append(h, handlers.AllowCredentials())
+	}
+
+	return h
 }

@@ -7,9 +7,10 @@ import (
 	"log"
 	"time"
 
+	"github.com/ratanphayade/imposter/evaluator"
+
 	"github.com/BurntSushi/toml"
 	"github.com/radovskyb/watcher"
-	"github.com/ratanphayade/imposter/evaluator"
 	"github.com/ratanphayade/imposter/server"
 )
 
@@ -22,6 +23,7 @@ const (
 	defaultWatch        = false
 
 	NotFoundResponseFile = "404.json"
+	CORSFile             = "cors.json"
 )
 
 var (
@@ -61,11 +63,12 @@ func init() {
 }
 
 func main() {
+	if *watch {
+		initializeWatcher(appMockPath)
+	}
 
-	initializeWatcher(appMockPath)
-
-	server.NewServer(Conf.Apps, *application).
-		AttachHandlers(Mock).
+	server.NewServer(Conf.Apps, *application, Mock).
+		AttachHandlers().
 		Run()
 }
 
@@ -96,11 +99,18 @@ func LoadMockConfig(path string) {
 	for _, v := range files {
 		filePath := path + "/" + v.Name()
 
-		if v.Name() == NotFoundResponseFile {
-			var dest evaluator.Response
-			readRequestMockConfig(filePath, &dest)
-			Mock.NotFound = dest
-		} else {
+		switch v.Name() {
+		case CORSFile:
+			var cors server.CORSOption
+			readRequestMockConfig(filePath, &cors)
+			Mock.CORSOptions = cors
+
+		case NotFoundResponseFile:
+			var notFound evaluator.Response
+			readRequestMockConfig(filePath, &notFound)
+			Mock.NotFound = notFound
+
+		default:
 			var route server.Route
 			readRequestMockConfig(filePath, &route)
 			routes = append(routes, route)

@@ -1,0 +1,10 @@
+{
+  "methods": [
+    "GET",
+    "POST"
+  ],
+  "headers": ["Content-Type"],
+  "exposed_headers": ["Cache-Control"],
+  "origins": ["*"],
+  "allow_credentials": true
+}
