@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/ratanphayade/imposter/evaluator"
 
@@ -11,8 +12,15 @@ import (
 )
 
 type App struct {
-	Host string
-	Port int
+	Host     string `toml:"host"`
+	Port     int    `toml:"port"`
+	MockPath string `toml:"mock_path"`
+}
+
+// Mock Config
+type MockConfig struct {
+	Routes   []Route
+	NotFound evaluator.Response
 }
 
 type Route struct {
@@ -55,15 +63,41 @@ func (s *server) Run() *server {
 	return s
 }
 
-func (s *server) AttachHandlers(routes []Route) *server {
-	for _, r := range routes {
-		s.mux.HandleFunc(r.Endpoint, handler(r.Evaluators)).Methods(r.Method)
+func (s *server) AttachHandlers(mc MockConfig) *server {
+	for _, r := range mc.Routes {
+		s.mux.HandleFunc(r.Endpoint, handler(r.Evaluators, mc.NotFound)).
+			Methods(r.Method)
 	}
+
+	s.mux.NotFoundHandler = s.mux.NewRoute().
+		HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			http.Error(w, mc.NotFound.Body, http.StatusNotFound)
+		}).GetHandler()
+
 	return s
 }
 
-func handler(evals []evaluator.Evaluator) func(w http.ResponseWriter, r *http.Request) {
+func handler(evals []evaluator.Evaluator, notFound evaluator.Response) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		evaluator.Evaluate(w, r, evals)
+		res := evaluator.Evaluate(r, evals, notFound)
+
+		writeResponse(w, res)
 	}
+}
+
+func writeResponse(w http.ResponseWriter, res evaluator.Response) {
+	for k, v := range res.Headers {
+		w.Header().Set(k, v)
+	}
+
+	if res.StatusCode == http.StatusNotFound {
+		http.Error(w, res.Body, http.StatusNotFound)
+		return
+	} else {
+		_, _ = w.Write([]byte(res.Body))
+	}
+
+	w.WriteHeader(res.StatusCode)
+
+	time.Sleep(time.Duration(res.Latency) * time.Millisecond)
 }
