@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"flag"
-	"fmt"
 	"github.com/BurntSushi/toml"
 	"github.com/ratanphayade/imposter/server"
 	"io/ioutil"
@@ -42,6 +41,7 @@ type MockConfig struct {
 var (
 	Conf Config
 	Mock MockConfig
+	ActualMockPath string
 )
 
 func init() {
@@ -54,13 +54,15 @@ func init() {
 
 	flag.Parse()
 
+	ActualMockPath = *mockPath+"/"+*application
 	LoadConfig(*configFilePath, *host, *port)
 	LoadMockConfig(*mockPath)
 }
 
 func main() {
-	server.NewServer(Conf.Apps, *application).
+		server.NewServer(Conf.Apps, *application).
 		AttachHandlers(Mock.Routes).
+		InitializeWatcher(ActualMockPath, LoadMockConfig).
 		Run()
 }
 
@@ -80,8 +82,6 @@ func LoadConfig(path string, host string, port int) {
 }
 
 func LoadMockConfig(path string) {
-	path = path + "/" + *application
-
 	files , err := ioutil.ReadDir(path)
 	if err != nil {
 		log.Fatal("failed to load open Mock Directory : ", err)

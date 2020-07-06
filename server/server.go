@@ -2,8 +2,10 @@ package server
 
 import (
 	"fmt"
+	"github.com/radovskyb/watcher"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/ratanphayade/imposter/evaluator"
 
@@ -60,6 +62,43 @@ func (s *server) AttachHandlers(routes []Route) *server {
 		s.mux.HandleFunc(r.Endpoint, handler(r.Evaluators)).Methods(r.Method)
 	}
 	return s
+}
+
+func (s *server) InitializeWatcher(path string, fn func(string)) *server {
+	w := watcher.New()
+	w.SetMaxEvents(1)
+	w.FilterOps(watcher.Rename, watcher.Move, watcher.Create, watcher.Write)
+
+	if err := w.AddRecursive(path); err != nil {
+		log.Printf("%s: error trying to watch change on %s directory", err, path)
+	}
+
+	go func() {
+		if err := w.Start(time.Millisecond * 1000); err != nil {
+			log.Println(err)
+		}
+	}()
+
+	readEventsFromWatcher(w, path, fn)
+
+	return s
+}
+
+func readEventsFromWatcher(w *watcher.Watcher, path string,  fn func(path string)) {
+	go func() {
+		for {
+			select {
+			case evt := <-w.Event:
+				log.Println("Modified file:", evt.Name())
+				fn(path)
+			case err := <-w.Error:
+				log.Println("error checking file change:", err)
+				fn(path)
+			case <-w.Closed:
+				return
+			}
+		}
+	}()
 }
 
 func handler(evals []evaluator.Evaluator) func(w http.ResponseWriter, r *http.Request) {
