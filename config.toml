@@ -1,3 +1,12 @@
 [[RouteMap]]
 service = "settlements"
 name    = "/execution_register.json"
+
+[apps]
+    [apps.settlement]
+        port = 9010
+        host = "localhost"
+
+    [apps.default]
+        port = 9005
+        host = "localhost"
