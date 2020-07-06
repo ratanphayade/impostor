@@ -16,9 +16,9 @@ type App struct {
 }
 
 type Route struct {
-	Method    string
-	Endpoint  string
-	Evaluator []evaluator.Evaluator
+	Method    string                `json:"method"`
+	Endpoint  string                `json:"endpoint"`
+	Evaluator []evaluator.Evaluator `json:"evaluator"`
 }
 
 type server struct {
