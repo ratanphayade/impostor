@@ -1,9 +1,9 @@
-
 [apps]
-    [apps.settlements]
+    [apps.app]
         port = 9010
         host = "localhost"
 
     [apps.default]
-        port = 9005
-        host = "localhost"
+        port      = 9005
+        host      = "localhost"
+        mock_path = "test"

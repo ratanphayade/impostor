@@ -2,9 +2,12 @@ package evaluator
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
-	"time"
+	"strings"
+
+	"github.com/gorilla/mux"
 )
 
 type Evaluator struct {
@@ -14,40 +17,68 @@ type Evaluator struct {
 
 type Response struct {
 	Label      string            `json:"label"`
-	Format     string            `json:"format"`
-	Latency    time.Duration     `json:"latency"`
+	Body       string            `json:"body"`
+	Latency    int64             `json:"latency"`
 	StatusCode int               `json:"status_code"`
 	Headers    map[string]string `json:"headers"`
 }
 
+type values map[string]string
+
+func (v values) get(key string) string {
+	if val, ok := v[key]; ok {
+		return val
+	}
+
+	return ""
+}
+
 type collector struct {
-	params    map[string]string
-	resources map[string]string
-	headers   map[string]string
+	params    values
+	resources values
+	headers   values
 	body      map[string]interface{}
 }
 
-func Evaluate(w http.ResponseWriter, r *http.Request, evals []Evaluator) {
+func (c collector) getFromParam(key string) string {
+	return c.params.get(key)
+}
+
+func (c collector) getFromResource(key string) string {
+	return c.resources.get(key)
+}
+
+func (c collector) getFromHeader(key string) string {
+	return c.headers.get(key)
+}
+
+func (c collector) getFromBody(key string) string {
+	return get(c.body, key)
+}
+
+func Evaluate(r *http.Request, evals []Evaluator, notFound Response) Response {
 	data := collectRequestDetails(r)
 
 	for _, eval := range evals {
 		if eval.match(data) {
-			eval.constructResponse(w)
+			return eval.constructResponse(eval.Response, data)
 		}
 	}
+
+	return notFound
 }
 
 func (e Evaluator) match(d collector) bool {
 	for _, rule := range e.Rules {
 		if !rule.match(d) {
-			break
+			return false
 		}
 	}
-	return false
+	return true
 }
 
-func (e Evaluator) constructResponse(w http.ResponseWriter) {
-
+func (e Evaluator) constructResponse(res Response, data collector) Response {
+	return res
 }
 
 func collectRequestDetails(r *http.Request) collector {
@@ -82,6 +113,10 @@ func collectHeaders(r *http.Request) map[string]string {
 func collectResources(r *http.Request) map[string]string {
 	data := map[string]string{}
 
+	for key, val := range mux.Vars(r) {
+		data[key] = val
+	}
+
 	return data
 }
 
@@ -89,8 +124,31 @@ func collectBody(r *http.Request) map[string]interface{} {
 	data := map[string]interface{}{}
 
 	if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
-		log.Print(err)
+		log.Println(err)
 	}
 
 	return data
+}
+
+func get(val map[string]interface{}, key string) string {
+	var (
+		result interface{}
+		keys   = strings.Split(key, ".")
+	)
+
+	if v, ok := val[keys[0]]; ok {
+		result = v
+	} else {
+		return ""
+	}
+
+	if len(keys) == 1 {
+		return fmt.Sprintf("%v", result)
+	}
+
+	if subVal, ok := result.(map[string]interface{}); ok {
+		return get(subVal, strings.Join(keys[1:], "."))
+	}
+
+	return ""
 }
