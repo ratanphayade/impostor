@@ -5,19 +5,30 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/ratanphayade/imposter/config"
+	"github.com/ratanphayade/imposter/evaluator"
 
 	"github.com/gorilla/mux"
 )
 
+type App struct {
+	Host string
+	Port int
+}
+
+type Route struct {
+	Method    string
+	Endpoint  string
+	Evaluator []evaluator.Evaluator
+}
+
 type server struct {
-	app config.App
+	app App
 	mux *mux.Router
 }
 
-func NewServer(cfg map[string]config.App, application string) *server {
+func NewServer(cfg map[string]App, application string) *server {
 	var (
-		listerConf config.App
+		listerConf App
 		ok         bool
 	)
 
@@ -44,15 +55,15 @@ func (s *server) Run() *server {
 	return s
 }
 
-func (s *server) AttachHandlers(routes []config.Route) *server {
+func (s *server) AttachHandlers(routes []Route) *server {
 	for _, r := range routes {
 		s.mux.HandleFunc(r.Endpoint, handler(r.Evaluator)).Methods(r.Method)
 	}
 	return s
 }
 
-func handler(eval []config.Evaluator) func(w http.ResponseWriter, r *http.Request) {
+func handler(eval []evaluator.Evaluator) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-
+		evaluator.Evaluate(w, r, eval)
 	}
 }

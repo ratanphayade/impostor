@@ -2,10 +2,12 @@ package main
 
 import (
 	"flag"
+	"log"
+
+	"github.com/BurntSushi/toml"
+	"github.com/ratanphayade/imposter/evaluator"
 
 	"github.com/ratanphayade/imposter/server"
-
-	"github.com/ratanphayade/imposter/config"
 )
 
 const (
@@ -26,6 +28,22 @@ var (
 	watch          *bool
 )
 
+// Config for running the Mock server
+// it will contain configs for multiple application
+type Config struct {
+	Apps map[string]server.App
+}
+
+// Mock Config
+type MockConfig struct {
+	Routes []server.Route
+}
+
+var (
+	Conf Config
+	Mock MockConfig
+)
+
 func init() {
 	host = flag.String("host", defaultHost, "if you run your server on a different host")
 	port = flag.Int("port", defaultPort, "port to run the server")
@@ -36,12 +54,68 @@ func init() {
 
 	flag.Parse()
 
-	config.LoadConfig(*configFilePath, *host, *port)
-	config.LoadMockConfig(*mockPath)
+	LoadConfig(*configFilePath, *host, *port)
+	LoadMockConfig(*mockPath)
 }
 
 func main() {
-	server.NewServer(config.Conf.Apps, *application).
-		AttachHandlers(config.Mock.Routes).
+	server.NewServer(Conf.Apps, *application).
+		AttachHandlers(Mock.Routes).
 		Run()
+}
+
+func LoadConfig(path string, host string, port int) {
+	Conf.Apps = make(map[string]server.App)
+
+	Conf.Apps["default"] = server.App{
+		Host: host,
+		Port: port,
+	}
+
+	if path != "" {
+		if _, err := toml.DecodeFile(path, &Conf); err != nil {
+			log.Fatal("failed to load Config : ", err)
+		}
+	}
+}
+
+func LoadMockConfig(path string) {
+	//if path == "" {
+	//	log.Fatal("Mock Config path is not loaded")
+	//}
+	//
+	//// TODO: fix this. to load Config form below format
+	////  - Mock
+	////    - settlements
+	////        - API-1 Config - files
+	////        - API-2 Config - files
+	////   also add watcher on particular dir
+	//if _, err := toml.DecodeFile(path, &Mock); err != nil {
+	//	log.Fatal("failed to load Mock Config : ", err)
+	//}
+
+	Mock.Routes = []server.Route{
+		{
+			Method:   "GET",
+			Endpoint: "/users",
+			Evaluator: []evaluator.Evaluator{
+				{
+					Response: evaluator.Response{
+						Label:      "success",
+						Format:     `{"name": "Ratan Phayade"}`,
+						Latency:    0,
+						StatusCode: 0,
+						Headers:    map[string]string{},
+					},
+					Rules: []evaluator.Rule{
+						{
+							Target:   "",
+							Modifier: "",
+							Value:    "",
+						},
+					},
+				},
+			},
+		},
+	}
 }
