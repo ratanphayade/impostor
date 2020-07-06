@@ -1,20 +1,20 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
-	"log"
-
+	"fmt"
 	"github.com/BurntSushi/toml"
-	"github.com/ratanphayade/imposter/evaluator"
-
 	"github.com/ratanphayade/imposter/server"
+	"io/ioutil"
+	"log"
 )
 
 const (
 	defaultHost         = "localhost"
 	defaultPort         = 9000
-	defaultRequestsPath = ""
-	defaultConfigFile   = ""
+	defaultRequestsPath = "mock"
+	defaultConfigFile   = "config.toml"
 	defaultApplication  = ""
 	defaultWatch        = false
 )
@@ -80,42 +80,28 @@ func LoadConfig(path string, host string, port int) {
 }
 
 func LoadMockConfig(path string) {
-	//if path == "" {
-	//	log.Fatal("Mock Config path is not loaded")
-	//}
-	//
-	//// TODO: fix this. to load Config form below format
-	////  - Mock
-	////    - settlements
-	////        - API-1 Config - files
-	////        - API-2 Config - files
-	////   also add watcher on particular dir
-	//if _, err := toml.DecodeFile(path, &Mock); err != nil {
-	//	log.Fatal("failed to load Mock Config : ", err)
-	//}
+	path = path + "/" + *application
 
-	Mock.Routes = []server.Route{
-		{
-			Method:   "GET",
-			Endpoint: "/users",
-			Evaluators: []evaluator.Evaluator{
-				{
-					Response: evaluator.Response{
-						Label:      "success",
-						Format:     `{"name": "Ratan Phayade"}`,
-						Latency:    0,
-						StatusCode: 0,
-						Headers:    map[string]string{},
-					},
-					Rules: []evaluator.Rule{
-						{
-							Target:   "",
-							Modifier: "",
-							Value:    "",
-						},
-					},
-				},
-			},
-		},
+	files , err := ioutil.ReadDir(path)
+	if err != nil {
+		log.Fatal("failed to load open Mock Directory : ", err)
 	}
+
+	var routes []server.Route
+
+	for _, v := range files {
+		var route server.Route
+		file , err := ioutil.ReadFile(path+"/"+v.Name())
+		if err != nil {
+			log.Fatal("failed to load Mock Config : ", err)
+		}
+
+		if err := json.Unmarshal(file, &route); err != nil {
+			log.Fatal("failed to un marshal Mock Config : ", err)
+		}
+
+		routes = append(routes, route)
+	}
+
+	Mock.Routes = routes
 }
