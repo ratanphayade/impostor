@@ -11,8 +11,8 @@ import (
 const (
 	defaultHost         = "localhost"
 	defaultPort         = 9000
-	defaultRequestsPath = ""
-	defaultConfigFile   = ""
+	defaultRequestsPath = "mock/"
+	defaultConfigFile   = "config.toml"
 	defaultApplication  = ""
 	defaultWatch        = false
 )

@@ -1,6 +1,9 @@
 package config
 
 import (
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
 	"log"
 	"time"
 
@@ -52,7 +55,17 @@ type Response struct {
 var (
 	Conf Config
 	Mock MockConfig
+	RouteMap RegisteredRoutes
 )
+
+type RegisteredRoutes struct {
+	RouteMap []ServiceRouteMap
+}
+
+type ServiceRouteMap struct {
+	Name    string
+	Service string
+}
 
 func LoadConfig(path string, host string, port int) {
 	if path == "" {
@@ -60,6 +73,10 @@ func LoadConfig(path string, host string, port int) {
 	}
 
 	if _, err := toml.DecodeFile(path, &Conf); err != nil {
+		log.Fatal("failed to load Config : ", err)
+	}
+
+	if _, err := toml.DecodeFile(path, &RouteMap); err != nil {
 		log.Fatal("failed to load Config : ", err)
 	}
 
@@ -80,7 +97,24 @@ func LoadMockConfig(path string) {
 	//        - API-1 Config - files
 	//        - API-2 Config - files
 	//   also add watcher on particular dir
-	if _, err := toml.DecodeFile(path, &Mock); err != nil {
-		log.Fatal("failed to load Mock Config : ", err)
+
+	var routes []Route
+
+	for _, v := range RouteMap.RouteMap {
+		var route []Route
+		nPath := path + v.Service + v.Name
+		fmt.Println(nPath)
+		file , err := ioutil.ReadFile(nPath)
+		if err != nil {
+			log.Fatal("failed to load Mock Config : ", err)
+		}
+
+		if err := json.Unmarshal(file, &routes); err != nil {
+			log.Fatal("failed to un marshal Mock Config : ", err)
+		}
+
+		routes = append(routes, route...)
 	}
+
+	Mock = MockConfig{Routes: routes}
 }
