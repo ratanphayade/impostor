@@ -34,7 +34,7 @@ func NewServer(cfg map[string]config.App, application string) *server {
 func (s *server) Run() *server {
 	httpServer := http.Server{
 		Handler: s.mux,
-		Addr:    fmt.Sprintf("%s:%d", s.app.Host, s.app.Host),
+		Addr:    fmt.Sprintf("%s:%d", s.app.Host, s.app.Port),
 	}
 
 	if err := httpServer.ListenAndServe(); err != nil {

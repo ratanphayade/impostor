@@ -55,32 +55,57 @@ var (
 )
 
 func LoadConfig(path string, host string, port int) {
-	if path == "" {
-		return
-	}
-
-	if _, err := toml.DecodeFile(path, &Conf); err != nil {
-		log.Fatal("failed to load Config : ", err)
-	}
+	Conf.Apps = make(map[string]App)
 
 	Conf.Apps["default"] = App{
 		Host: host,
 		Port: port,
 	}
+
+	if path != "" {
+		if _, err := toml.DecodeFile(path, &Conf); err != nil {
+			log.Fatal("failed to load Config : ", err)
+		}
+	}
 }
 
 func LoadMockConfig(path string) {
-	if path == "" {
-		log.Fatal("Mock Config path is not loaded")
-	}
+	//if path == "" {
+	//	log.Fatal("Mock Config path is not loaded")
+	//}
+	//
+	//// TODO: fix this. to load Config form below format
+	////  - Mock
+	////    - settlements
+	////        - API-1 Config - files
+	////        - API-2 Config - files
+	////   also add watcher on particular dir
+	//if _, err := toml.DecodeFile(path, &Mock); err != nil {
+	//	log.Fatal("failed to load Mock Config : ", err)
+	//}
 
-	// TODO: fix this. to load Config form below format
-	//  - Mock
-	//    - settlements
-	//        - API-1 Config - files
-	//        - API-2 Config - files
-	//   also add watcher on particular dir
-	if _, err := toml.DecodeFile(path, &Mock); err != nil {
-		log.Fatal("failed to load Mock Config : ", err)
+	Mock.Routes = []Route{
+		{
+			Method:   "GET",
+			Endpoint: "/users",
+			Evaluator: []Evaluator{
+				{
+					Response: Response{
+						Label:      "success",
+						Format:     `{"name": "Ratan Phayade"}`,
+						Latency:    0,
+						StatusCode: 0,
+						Headers:    map[string]string{},
+					},
+					Rules: []Rule{
+						{
+							Target:   "",
+							Modifier: "",
+							Value:    "",
+						},
+					},
+				},
+			},
+		},
 	}
 }
