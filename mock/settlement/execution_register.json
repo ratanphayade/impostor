@@ -1,0 +1,25 @@
+ {
+    "method": "POST",
+    "endpoint": "/Register",
+    "evaluator": [
+      {
+        "response": {
+          "label": "abc",
+          "format": "temp",
+          "latency": 0,
+          "statusCode": 200,
+          "headers": {
+            "a": "tee",
+            "b": "bee"
+          }
+        },
+        "rules": [
+          {
+            "target": "rr",
+            "modifier": "rrr",
+            "value": "bcc"
+          }
+        ]
+      }
+    ]
+  }

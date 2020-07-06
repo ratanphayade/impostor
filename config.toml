@@ -1,6 +1,3 @@
-[[RouteMap]]
-service = "settlements"
-name    = "/execution_register.json"
 
 [apps]
     [apps.settlement]
