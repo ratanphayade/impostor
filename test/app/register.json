@@ -1,23 +1,22 @@
  {
     "method": "POST",
-    "endpoint": "/Register",
-    "evaluator": [
+    "endpoint": "/register/1",
+    "evaluators": [
       {
         "response": {
           "label": "success",
-          "format": "temp",
+          "body": "{\"status\": \"registered\"}",
           "latency": 0,
           "statusCode": 200,
           "headers": {
-            "a": "tee",
-            "b": "bee"
+            "Content-Type": "application/json"
           }
         },
         "rules": [
           {
-            "target": "rr",
-            "modifier": "rrr",
-            "value": "bcc"
+           "target":"header",
+           "modifier":"Id",
+           "value": "1"
           }
         ]
       }

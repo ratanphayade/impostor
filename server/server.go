@@ -2,7 +2,6 @@ package server
 
 import (
 	"fmt"
-	"github.com/radovskyb/watcher"
 	"log"
 	"net/http"
 	"time"
@@ -13,8 +12,15 @@ import (
 )
 
 type App struct {
-	Host string
-	Port int
+	Host     string `toml:"host"`
+	Port     int    `toml:"port"`
+	MockPath string `toml:"mock_path"`
+}
+
+// Mock Config
+type MockConfig struct {
+	Routes   []Route
+	NotFound evaluator.Response
 }
 
 type Route struct {
@@ -57,52 +63,41 @@ func (s *server) Run() *server {
 	return s
 }
 
-func (s *server) AttachHandlers(routes []Route) *server {
-	for _, r := range routes {
-		s.mux.HandleFunc(r.Endpoint, handler(r.Evaluators)).Methods(r.Method)
-	}
-	return s
-}
-
-func (s *server) InitializeWatcher(path string, fn func(string)) *server {
-	w := watcher.New()
-	w.SetMaxEvents(1)
-	w.FilterOps(watcher.Rename, watcher.Move, watcher.Create, watcher.Write)
-
-	if err := w.AddRecursive(path); err != nil {
-		log.Printf("%s: error trying to watch change on %s directory", err, path)
+func (s *server) AttachHandlers(mc MockConfig) *server {
+	for _, r := range mc.Routes {
+		s.mux.HandleFunc(r.Endpoint, handler(r.Evaluators, mc.NotFound)).
+			Methods(r.Method)
 	}
 
-	go func() {
-		if err := w.Start(time.Millisecond * 1000); err != nil {
-			log.Println(err)
-		}
-	}()
-
-	readEventsFromWatcher(w, path, fn)
+	s.mux.NotFoundHandler = s.mux.NewRoute().
+		HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			http.Error(w, mc.NotFound.Body, http.StatusNotFound)
+		}).GetHandler()
 
 	return s
 }
 
-func readEventsFromWatcher(w *watcher.Watcher, path string,  fn func(path string)) {
-	go func() {
-		for {
-			select {
-			case evt := <-w.Event:
-				log.Println("Modified file:", evt.Name())
-				fn(path)
-			case err := <-w.Error:
-				log.Println("error checking file change:", err)
-				fn(path)
-			case <-w.Closed:
-				return
-			}
-		}
-	}()
-}
-
-func handler(evals []evaluator.Evaluator) func(w http.ResponseWriter, r *http.Request) {
+func handler(evals []evaluator.Evaluator, notFound evaluator.Response) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		evaluator.Evaluate(w, r, evals)
+		res := evaluator.Evaluate(r, evals, notFound)
+
+		writeResponse(w, res)
 	}
+}
+
+func writeResponse(w http.ResponseWriter, res evaluator.Response) {
+	for k, v := range res.Headers {
+		w.Header().Set(k, v)
+	}
+
+	if res.StatusCode == http.StatusNotFound {
+		http.Error(w, res.Body, http.StatusNotFound)
+		return
+	} else {
+		_, _ = w.Write([]byte(res.Body))
+	}
+
+	w.WriteHeader(res.StatusCode)
+
+	time.Sleep(time.Duration(res.Latency) * time.Millisecond)
 }

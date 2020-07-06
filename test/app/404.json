@@ -1,0 +1,9 @@
+{
+    "label": "not found",
+    "body": "custom not found",
+    "latency": 0,
+    "status_code": 404,
+    "headers": {
+      "Content-Type": "application/json"
+    }
+}
