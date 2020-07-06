@@ -2,10 +2,10 @@ package main
 
 import (
 	"flag"
-	"log"
 
-	"github.com/BurntSushi/toml"
-	_ "github.com/radovskyb/watcher"
+	"github.com/ratanphayade/imposter/server"
+
+	"github.com/ratanphayade/imposter/config"
 )
 
 const (
@@ -24,9 +24,6 @@ var (
 	application    *string
 	configFilePath *string
 	watch          *bool
-
-	conf config
-	mock mockConfig
 )
 
 func init() {
@@ -39,37 +36,12 @@ func init() {
 
 	flag.Parse()
 
-	loadConfig()
-	loadMockConfig()
+	config.LoadConfig(*configFilePath, *host, *port)
+	config.LoadMockConfig(*mockPath)
 }
 
 func main() {
-	srv := &server{}
-	srv.run(*host, *port, conf)
-}
-
-func loadConfig() {
-	if *configFilePath == "" {
-		return
-	}
-
-	if _, err := toml.DecodeFile(*configFilePath, &conf); err != nil {
-		log.Fatal("failed to load config : ", err)
-	}
-}
-
-func loadMockConfig() {
-	if *mockPath == "" {
-		log.Fatal("mock config path is not loaded")
-	}
-
-	// TODO: fix this. to load config form below format
-	//  - mock
-	//    - settlements
-	//        - API-1 config - files
-	//        - API-2 config - files
-	//   also add watcher on particular dir
-	if _, err := toml.DecodeFile(*mockPath, &mock); err != nil {
-		log.Fatal("failed to load mock config : ", err)
-	}
+	server.NewServer(config.Conf.Apps, *application).
+		AttachHandlers(config.Mock.Routes).
+		Run()
 }
