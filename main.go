@@ -5,10 +5,11 @@ import (
 	"flag"
 	"io/ioutil"
 	"log"
-
-	"github.com/ratanphayade/imposter/evaluator"
+	"time"
 
 	"github.com/BurntSushi/toml"
+	"github.com/radovskyb/watcher"
+	"github.com/ratanphayade/imposter/evaluator"
 	"github.com/ratanphayade/imposter/server"
 )
 
@@ -39,8 +40,9 @@ type Config struct {
 }
 
 var (
-	Conf Config
-	Mock server.MockConfig
+	Conf        Config
+	appMockPath string
+	Mock        server.MockConfig
 )
 
 func init() {
@@ -53,11 +55,15 @@ func init() {
 
 	flag.Parse()
 
+	appMockPath = *mockPath + "/" + *application
 	LoadConfig(*configFilePath, *host, *port)
-	LoadMockConfig(*mockPath)
+	LoadMockConfig(appMockPath)
 }
 
 func main() {
+
+	initializeWatcher(appMockPath)
+
 	server.NewServer(Conf.Apps, *application).
 		AttachHandlers(Mock).
 		Run()
@@ -80,16 +86,6 @@ func LoadConfig(path string, host string, port int) {
 }
 
 func LoadMockConfig(path string) {
-	if path == "" {
-		if cnf, ok := Conf.Apps[*application]; ok {
-			path = cnf.MockPath
-		} else {
-			log.Fatal("invalid mock config path")
-		}
-	}
-
-	path = path + "/" + *application
-
 	files, err := ioutil.ReadDir(path)
 	if err != nil {
 		log.Fatal("failed to load open Mock Directory : ", err)
@@ -116,6 +112,43 @@ func LoadMockConfig(path string) {
 	}
 
 	Mock.Routes = routes
+}
+
+func initializeWatcher(path string) {
+	w := watcher.New()
+	w.SetMaxEvents(1)
+	w.FilterOps(watcher.Rename, watcher.Move, watcher.Create, watcher.Write)
+
+	if err := w.Add(path); err != nil {
+		log.Printf("%s: error trying to watch change on %s directory", err, path)
+	}
+
+	go func() {
+		if err := w.Start(time.Second); err != nil {
+			log.Println(err)
+		}
+	}()
+
+	readEventsFromWatcher(w, path)
+}
+
+func readEventsFromWatcher(w *watcher.Watcher, path string) {
+	go func() {
+		for {
+			select {
+			case evt := <-w.Event:
+				log.Println("modified file:", evt.Name())
+				LoadMockConfig(path)
+
+			case err := <-w.Error:
+				log.Println("error checking file change:", err)
+				LoadMockConfig(path)
+
+			case <-w.Closed:
+				return
+			}
+		}
+	}()
 }
 
 func readRequestMockConfig(filePath string, dest interface{}) {

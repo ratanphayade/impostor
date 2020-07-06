@@ -1,6 +1,6 @@
  {
     "method": "POST",
-    "endpoint": "/register/{id}",
+    "endpoint": "/register/1",
     "evaluators": [
       {
         "response": {
@@ -14,8 +14,8 @@
         },
         "rules": [
           {
-           "target":"resource",
-           "modifier":"id",
+           "target":"header",
+           "modifier":"Id",
            "value": "1"
           }
         ]
