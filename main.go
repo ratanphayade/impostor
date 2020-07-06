@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"flag"
+	"fmt"
 	"github.com/BurntSushi/toml"
 	"github.com/ratanphayade/imposter/server"
 	"io/ioutil"
