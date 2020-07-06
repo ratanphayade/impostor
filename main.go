@@ -81,9 +81,6 @@ func LoadConfig(path string, host string, port int) {
 func LoadMockConfig(path string) {
 	path = path + "/" + *application
 
-	// adding this as the application is not returning any value
-	path = "mock/settlement/"
-
 	files , err := ioutil.ReadDir(path)
 	if err != nil {
 		log.Fatal("failed to load open Mock Directory : ", err)
@@ -93,7 +90,7 @@ func LoadMockConfig(path string) {
 
 	for _, v := range files {
 		var route server.Route
-		file , err := ioutil.ReadFile(path+v.Name())
+		file , err := ioutil.ReadFile(path+"/"+v.Name())
 		if err != nil {
 			log.Fatal("failed to load Mock Config : ", err)
 		}
@@ -106,29 +103,4 @@ func LoadMockConfig(path string) {
 	}
 
 	Mock.Routes = routes
-
-	//Mock.Routes = []server.Route{
-	//	{
-	//		Method:   "GET",
-	//		Endpoint: "/users",
-	//		Evaluator: []evaluator.Evaluator{
-	//			{
-	//				Response: evaluator.Response{
-	//					Label:      "success",
-	//					Format:     `{"name": "Ratan Phayade"}`,
-	//					Latency:    0,
-	//					StatusCode: 0,
-	//					Headers:    map[string]string{},
-	//				},
-	//				Rules: []evaluator.Rule{
-	//					{
-	//						Target:   "",
-	//						Modifier: "",
-	//						Value:    "",
-	//					},
-	//				},
-	//			},
-	//		},
-	//	},
-	//}
 }
