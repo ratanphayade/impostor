@@ -9,8 +9,8 @@ import (
 
 	"github.com/BurntSushi/toml"
 
-	"github.com/ratanphayade/imposter/evaluator"
-	"github.com/ratanphayade/imposter/server"
+	"github.com/ratanphayade/impostor/evaluator"
+	"github.com/ratanphayade/impostor/server"
 )
 
 var (

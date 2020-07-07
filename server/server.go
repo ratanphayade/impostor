@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/ratanphayade/imposter/evaluator"
+	"github.com/ratanphayade/impostor/evaluator"
 
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"

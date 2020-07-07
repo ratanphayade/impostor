@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/ratanphayade/imposter/utils"
+	"github.com/ratanphayade/impostor/utils"
 )
 
 const (

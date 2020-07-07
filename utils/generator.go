@@ -12,7 +12,7 @@ func init() {
 
 type GeneratorFunc func(n int) string
 
-var letterRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+var letterRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
 
 func GenerateString(n int) string {
 	b := make([]rune, n)

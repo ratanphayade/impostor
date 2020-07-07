@@ -1,4 +1,4 @@
-module github.com/ratanphayade/imposter
+module github.com/ratanphayade/impostor
 
 go 1.13
 

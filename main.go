@@ -3,7 +3,7 @@ package main
 import (
 	"flag"
 
-	"github.com/ratanphayade/imposter/server"
+	"github.com/ratanphayade/impostor/server"
 )
 
 const (
