@@ -5,6 +5,7 @@ import (
 	"flag"
 	"io/ioutil"
 	"log"
+	"net/http"
 	"sort"
 	"time"
 
@@ -37,13 +38,13 @@ var (
 
 	// this is status code order based on which we will be ordering the
 	StatusCodeOrder = map[int]int{
-		500:7,
-		401:6,
-		400:5,
-		403:4,
-		404:3,
-		201:2,
-		200:1,
+		http.StatusInternalServerError	:7,
+		http.StatusUnauthorized		  	:6,
+		http.StatusBadRequest		  	:5,
+		http.StatusForbidden		  	:4,
+		http.StatusNotFound  		  	:3,
+		http.StatusCreated			  	:2,
+		http.StatusOK				  	:1,
 	}
 )
 
