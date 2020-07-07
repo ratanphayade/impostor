@@ -1,24 +1,18 @@
  {
     "method": "POST",
-    "endpoint": "/register/1",
+    "endpoint": "/register/{id}",
     "evaluators": [
       {
         "response": {
           "label": "success",
-          "body": "{\"status\": \"registered\"}",
+          "body": "{\"status\": \"registered\", \"id\":\"{{ copy body id.id }}\"}",
           "latency": 0,
           "statusCode": 200,
           "headers": {
             "Content-Type": "application/json"
           }
         },
-        "rules": [
-          {
-           "target": "body",
-           "modifier": "id",
-           "value": "true"
-          }
-        ]
+        "rules": []
       }
     ]
   }

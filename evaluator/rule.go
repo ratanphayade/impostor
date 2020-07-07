@@ -34,21 +34,5 @@ func (rule Rule) match(d collector) bool {
 }
 
 func (rule Rule) getValue(d collector) string {
-	switch rule.Target {
-	case TargetParams:
-		return d.getFromParam(rule.Modifier)
-
-	case TargetHeader:
-		return d.getFromHeader(rule.Modifier)
-
-	case TargetBody:
-		return d.getFromBody(rule.Modifier)
-
-	case TargetResource:
-		return d.getFromResource(rule.Modifier)
-	}
-
-	log.Println("no matching target found")
-
-	return ""
+	return d.get(rule.Target, rule.Modifier)
 }

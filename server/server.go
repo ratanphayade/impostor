@@ -125,12 +125,11 @@ func writeResponse(w http.ResponseWriter, res evaluator.Response) {
 	}
 
 	if res.StatusCode == http.StatusNotFound {
-		http.Error(w, res.Body, http.StatusNotFound)
+		http.Error(w, res.Body, res.StatusCode)
 		return
-	} else {
-		_, _ = w.Write([]byte(res.Body))
 	}
 
+	_, _ = w.Write([]byte(res.Body))
 	w.WriteHeader(res.StatusCode)
 
 	time.Sleep(time.Duration(res.Latency) * time.Millisecond)

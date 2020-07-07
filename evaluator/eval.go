@@ -15,14 +15,6 @@ type Evaluator struct {
 	Rules    []Rule   `json:"rules"`
 }
 
-type Response struct {
-	Label      string            `json:"label"`
-	Body       string            `json:"body"`
-	Latency    int64             `json:"latency"`
-	StatusCode int               `json:"status_code"`
-	Headers    map[string]string `json:"headers"`
-}
-
 type values map[string]string
 
 func (v values) get(key string) string {
@@ -56,12 +48,32 @@ func (c collector) getFromBody(key string) string {
 	return get(c.body, key)
 }
 
+func (c collector) get(target string, modifier string) string {
+	switch target {
+	case TargetParams:
+		return c.getFromParam(modifier)
+
+	case TargetHeader:
+		return c.getFromHeader(modifier)
+
+	case TargetBody:
+		return c.getFromBody(modifier)
+
+	case TargetResource:
+		return c.getFromResource(modifier)
+	}
+
+	log.Println("no matching target found")
+
+	return ""
+}
+
 func Evaluate(r *http.Request, evals []Evaluator, notFound Response) Response {
 	data := collectRequestDetails(r)
 
 	for _, eval := range evals {
 		if eval.match(data) {
-			return eval.constructResponse(eval.Response, data)
+			return eval.Response.construct(data)
 		}
 	}
 
@@ -75,10 +87,6 @@ func (e Evaluator) match(d collector) bool {
 		}
 	}
 	return true
-}
-
-func (e Evaluator) constructResponse(res Response, data collector) Response {
-	return res
 }
 
 func collectRequestDetails(r *http.Request) collector {
