@@ -10,9 +10,6 @@ import (
 	"sort"
 
 	"github.com/BurntSushi/toml"
-
-	"github.com/ratanphayade/impostor/evaluator"
-	"github.com/ratanphayade/impostor/server"
 )
 
 var (
@@ -29,9 +26,9 @@ var (
 )
 
 func LoadConfig(path string, host string, port int) {
-	Conf.Apps = make(map[string]server.App)
+	Conf.Apps = make(map[string]App)
 
-	Conf.Apps["default"] = server.App{
+	Conf.Apps["default"] = App{
 		Host:     host,
 		Port:     port,
 		MockPath: "test",
@@ -50,7 +47,7 @@ func LoadMockConfig(path string) {
 		log.Fatal("failed to load open Mock Directory : ", err)
 	}
 
-	var routes []server.Route
+	var routes []Route
 
 	for _, v := range files {
 		if filepath.Ext(v.Name()) != ".json" {
@@ -62,17 +59,17 @@ func LoadMockConfig(path string) {
 
 		switch v.Name() {
 		case CORSFile:
-			var cors server.CORSOption
+			var cors CORSOption
 			readRequestMockConfig(filePath, &cors)
 			Mock.CORSOptions = cors
 
 		case NotFoundResponseFile:
-			var notFound evaluator.Response
+			var notFound Response
 			readRequestMockConfig(filePath, &notFound)
 			Mock.NotFound = notFound
 
 		default:
-			var route server.Route
+			var route Route
 			readRequestMockConfig(filePath, &route)
 			routes = append(routes, route)
 

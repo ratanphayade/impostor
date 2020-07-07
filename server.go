@@ -1,12 +1,10 @@
-package server
+package main
 
 import (
 	"fmt"
 	"log"
 	"net/http"
 	"time"
-
-	"github.com/ratanphayade/impostor/evaluator"
 
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
@@ -38,7 +36,7 @@ type App struct {
 // Mock Config
 type MockConfig struct {
 	Routes      []Route
-	NotFound    evaluator.Response
+	NotFound    Response
 	CORSOptions CORSOption
 }
 
@@ -51,9 +49,9 @@ type CORSOption struct {
 }
 
 type Route struct {
-	Method     string                `json:"method"`
-	Endpoint   string                `json:"endpoint"`
-	Evaluators []evaluator.Evaluator `json:"evaluators"`
+	Method     string      `json:"method"`
+	Endpoint   string      `json:"endpoint"`
+	Evaluators []Evaluator `json:"evaluators"`
 }
 
 type server struct {
@@ -111,15 +109,15 @@ func (s *server) Run() *server {
 	return s
 }
 
-func handler(evals []evaluator.Evaluator, notFound evaluator.Response) http.HandlerFunc {
+func handler(evals []Evaluator, notFound Response) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		res := evaluator.Evaluate(r, evals, notFound)
+		res := Evaluate(r, evals, notFound)
 
 		writeResponse(w, res)
 	}
 }
 
-func writeResponse(w http.ResponseWriter, res evaluator.Response) {
+func writeResponse(w http.ResponseWriter, res Response) {
 	for k, v := range res.Headers {
 		w.Header().Set(k, v)
 	}

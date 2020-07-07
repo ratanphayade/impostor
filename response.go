@@ -1,12 +1,10 @@
-package evaluator
+package main
 
 import (
 	"log"
 	"regexp"
 	"strconv"
 	"strings"
-
-	"github.com/ratanphayade/impostor/utils"
 )
 
 const (
@@ -18,9 +16,9 @@ const (
 )
 
 var (
-	generator = map[string]utils.GeneratorFunc{
-		GeneratorString: utils.GenerateString,
-		GeneratorInt:    utils.GenerateInt,
+	generator = map[string]GeneratorFunc{
+		GeneratorString: GenerateString,
+		GeneratorInt:    GenerateInt,
 	}
 )
 

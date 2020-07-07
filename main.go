@@ -2,8 +2,6 @@ package main
 
 import (
 	"flag"
-
-	"github.com/ratanphayade/impostor/server"
 )
 
 const (
@@ -30,13 +28,13 @@ var (
 // Config for running the Mock server
 // it will contain configs for multiple app
 type Config struct {
-	Apps map[string]server.App
+	Apps map[string]App
 }
 
 var (
 	Conf        Config
 	appMockPath string
-	Mock        server.MockConfig
+	Mock        MockConfig
 )
 
 func init() {
@@ -59,7 +57,7 @@ func main() {
 		initializeWatcher(appMockPath)
 	}
 
-	server.NewServer(Conf.Apps, *app, Mock).
+	NewServer(Conf.Apps, *app, Mock).
 		AttachHandlers().
 		Run()
 }
