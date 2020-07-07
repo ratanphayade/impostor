@@ -7,16 +7,28 @@
           "label": "success",
           "body": "{\"status\": \"registered\"}",
           "latency": 0,
-          "statusCode": 200,
+          "status_code": 200,
+          "headers": {
+            "Content-Type": "application/json"
+          }
+        },
+        "rules": []
+      },
+      {
+        "response": {
+          "label": "failure",
+          "body": "{\"status\": \"duplicate\"}",
+          "latency": 0,
+          "status_code": 201,
           "headers": {
             "Content-Type": "application/json"
           }
         },
         "rules": [
           {
-           "target": "body",
-           "modifier": "id",
-           "value": "true"
+            "target": "body",
+            "modifier": "id",
+            "value": "true"
           }
         ]
       }

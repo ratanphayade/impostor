@@ -5,6 +5,8 @@ import (
 	"flag"
 	"io/ioutil"
 	"log"
+	"net/http"
+	"sort"
 	"time"
 
 	"github.com/ratanphayade/imposter/evaluator"
@@ -33,6 +35,17 @@ var (
 	application    *string
 	configFilePath *string
 	watch          *bool
+
+	// this is status code order based on which we will be ordering the
+	StatusCodeOrder = map[int]int{
+		http.StatusInternalServerError	:7,
+		http.StatusUnauthorized		  	:6,
+		http.StatusBadRequest		  	:5,
+		http.StatusForbidden		  	:4,
+		http.StatusNotFound  		  	:3,
+		http.StatusCreated			  	:2,
+		http.StatusOK				  	:1,
+	}
 )
 
 // Config for running the Mock server
@@ -114,6 +127,14 @@ func LoadMockConfig(path string) {
 			var route server.Route
 			readRequestMockConfig(filePath, &route)
 			routes = append(routes, route)
+
+			evals := route.Evaluators
+			sort.Slice(evals, func(i, j int) bool {
+				return StatusCodeOrder[evals[i].Response.StatusCode] >
+					StatusCodeOrder[evals[j].Response.StatusCode]
+			})
+
+			route.Evaluators = evals
 		}
 	}
 
