@@ -5,6 +5,8 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
+	"path/filepath"
 	"sort"
 
 	"github.com/BurntSushi/toml"
@@ -51,7 +53,12 @@ func LoadMockConfig(path string) {
 	var routes []server.Route
 
 	for _, v := range files {
-		filePath := path + "/" + v.Name()
+		if filepath.Ext(v.Name()) != ".json" {
+			log.Println("error: invalid file format: ", v.Name())
+			continue
+		}
+
+		filePath := path + string(os.PathSeparator) + v.Name()
 
 		switch v.Name() {
 		case CORSFile:

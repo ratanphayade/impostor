@@ -1,9 +1,5 @@
 [apps]
-    [apps.app]
-        port = 9010
-        host = "localhost"
-
     [apps.default]
-        port      = 9005
+        port      = 9000
         host      = "localhost"
         mock_path = "test"

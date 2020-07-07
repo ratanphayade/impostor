@@ -7,12 +7,12 @@ import (
 )
 
 const (
-	defaultHost         = "localhost"
-	defaultPort         = 9000
-	defaultRequestsPath = ""
-	defaultConfigFile   = ""
-	defaultApplication  = ""
-	defaultWatch        = false
+	defaultHost        = "localhost"
+	defaultPort        = 9000
+	defaultMockPath    = "test"
+	defaultConfigFile  = "config.toml"
+	defaultApplication = "app"
+	defaultWatch       = false
 
 	NotFoundResponseFile = "404.json"
 	CORSFile             = "cors.json"
@@ -22,13 +22,13 @@ var (
 	host           *string
 	port           *int
 	mockPath       *string
-	application    *string
+	app            *string
 	configFilePath *string
 	watch          *bool
 )
 
 // Config for running the Mock server
-// it will contain configs for multiple application
+// it will contain configs for multiple app
 type Config struct {
 	Apps map[string]server.App
 }
@@ -42,14 +42,14 @@ var (
 func init() {
 	host = flag.String("host", defaultHost, "if you run your server on a different host")
 	port = flag.Int("port", defaultPort, "port to run the server")
-	watch = flag.Bool("watch", defaultWatch, "if true, then watch for any change in application mock config and reload")
-	mockPath = flag.String("mock", defaultRequestsPath, "directory where your mock configs are saved")
-	application = flag.String("application", defaultApplication, "name of the application which has to be mocked")
+	watch = flag.Bool("watch", defaultWatch, "if true, then watch for any change in app mock config and reload")
+	mockPath = flag.String("mock", defaultMockPath, "directory where your mock configs are saved")
+	app = flag.String("app", defaultApplication, "name of the app which has to be mocked")
 	configFilePath = flag.String("config", defaultConfigFile, "path with configuration file")
 
 	flag.Parse()
 
-	appMockPath = *mockPath + "/" + *application
+	appMockPath = *mockPath + "/" + *app
 	LoadConfig(*configFilePath, *host, *port)
 	LoadMockConfig(appMockPath)
 }
@@ -59,7 +59,7 @@ func main() {
 		initializeWatcher(appMockPath)
 	}
 
-	server.NewServer(Conf.Apps, *application, Mock).
+	server.NewServer(Conf.Apps, *app, Mock).
 		AttachHandlers().
 		Run()
 }
