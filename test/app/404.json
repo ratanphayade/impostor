@@ -1,6 +1,6 @@
 {
     "label": "not found",
-    "body": "custom not found",
+    "body": "request resource not found",
     "latency": 0,
     "status_code": 404,
     "headers": {

@@ -1,0 +1,36 @@
+{
+  "method": "Delete",
+  "endpoint": "/users/{id}",
+  "evaluators": [
+    {
+      "response": {
+        "label": "delete",
+        "body": "",
+        "latency": 0,
+        "status_code": 204,
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "rules": []
+    },
+    {
+      "response": {
+        "label": "not found",
+        "body": "{\"id\":\"{{ copy resource id }}\", \"description\":\"resource not found\"}",
+        "latency": 0,
+        "status_code": 404,
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "rules": [
+        {
+          "target": "resource",
+          "modifier": "id",
+          "value": "3"
+        }
+      ]
+    }
+  ]
+}

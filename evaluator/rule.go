@@ -27,7 +27,7 @@ func (rule Rule) match(d collector) bool {
 		if err != nil {
 			log.Fatal(err)
 		}
-		return exp.Match([]byte(rule.Value))
+		return exp.Match([]byte(val))
 	}
 
 	return val == rule.Value

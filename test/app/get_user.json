@@ -1,0 +1,60 @@
+{
+  "method": "GET",
+  "endpoint": "/users/{id}",
+  "evaluators": [
+    {
+      "response": {
+        "label": "success",
+        "body": "{\"id\":1,\"firstname\":\"Hodor\",\"lastname\":\"\",\"last_seen\":\"The Door\"}",
+        "latency": 0,
+        "status_code": 200,
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "rules": [
+        {
+          "target": "resource",
+          "modifier": "id",
+          "value": "1"
+        }
+      ]
+    },
+    {
+      "response": {
+        "label": "search",
+        "body": "{\"id\":2,\"firstname\":\"John\",\"lastname\":\"Snow\",\"last_seen\":\"The Iron Throne\"}",
+        "latency": 0,
+        "status_code": 201,
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "rules": [
+        {
+          "target": "resource",
+          "modifier": "id",
+          "value": "2"
+        }
+      ]
+    },
+    {
+      "response": {
+        "label": "search",
+        "body": "{\"description\":\"something went wrong\"}",
+        "latency": 0,
+        "status_code": 500,
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "rules": [
+        {
+          "target": "resource",
+          "modifier": "id",
+          "value": "3"
+        }
+      ]
+    }
+  ]
+}

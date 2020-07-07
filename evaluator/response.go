@@ -33,6 +33,8 @@ type Response struct {
 }
 
 func (r Response) construct(data collector) Response {
+	log.Println("constructing response for label: ", r.Label)
+
 	placeholder := r.parsePlaceholders()
 	resolvePlaceholder(placeholder, data)
 	return r.apply(placeholder)

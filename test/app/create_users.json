@@ -1,0 +1,60 @@
+{
+  "method": "POST",
+  "endpoint": "/users",
+  "evaluators": [
+    {
+      "response": {
+        "label": "create",
+        "body": "{\"id\":\"{{ generate string 14 }}\",\"firstname\":\"{{ copy body firstname }}\",\"lastname\":\"{{ copy body lastname }}\",\"last_seen\":\"{{ copy body option.status }}\"}",
+        "latency": 0,
+        "status_code": 201,
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "rules": []
+    },
+    {
+      "response": {
+        "label": "duplicate",
+        "body": "{\"id\":2,\"firstname\":\"John\",\"lastname\":\"Snow\",\"last_seen\":\"The Iron Throne\"}",
+        "latency": 0,
+        "status_code": 200,
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "rules": [
+        {
+          "target": "body",
+          "modifier": "firstname",
+          "value": "John"
+        },
+        {
+          "target": "body",
+          "modifier": "lastname",
+          "value": "Snow"
+        }
+      ]
+    },
+    {
+      "response": {
+        "label": "failure",
+        "body": "{\"description\":\"something went wrong\"}",
+        "latency": 0,
+        "status_code": 500,
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "rules": [
+        {
+          "target": "body",
+          "modifier": "firstname",
+          "value": "Bran",
+          "is_regex": true
+        }
+      ]
+    }
+  ]
+}

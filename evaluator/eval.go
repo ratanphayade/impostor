@@ -16,24 +16,41 @@ type Evaluator struct {
 }
 
 func Evaluate(r *http.Request, evals []Evaluator, notFound Response) Response {
-	data := collectRequestDetails(r)
+	var (
+		hasDefault  bool
+		defaultEval Evaluator
+		data        = collectRequestDetails(r)
+	)
 
 	for _, eval := range evals {
-		if eval.match(data) {
-			return eval.Response.construct(data)
+		if def, match := eval.match(data); match {
+			if def {
+				hasDefault = true
+				defaultEval = eval
+			} else {
+				return eval.Response.construct(data)
+			}
 		}
+	}
+
+	if hasDefault {
+		return defaultEval.Response.construct(data)
 	}
 
 	return notFound
 }
 
-func (e Evaluator) match(d collector) bool {
+func (e Evaluator) match(d collector) (bool, bool) {
+	if len(e.Rules) == 0 {
+		return true, true
+	}
+
 	for _, rule := range e.Rules {
 		if !rule.match(d) {
-			return false
+			return false, false
 		}
 	}
-	return true
+	return false, true
 }
 
 func collectRequestDetails(r *http.Request) collector {

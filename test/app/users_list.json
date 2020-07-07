@@ -1,0 +1,54 @@
+ {
+    "method": "GET",
+    "endpoint": "/users",
+    "evaluators": [
+      {
+        "response": {
+          "label": "success",
+          "body": "[ {\"id\":1,\"firstname\":\"Hodor\",\"lastname\":\"\",\"last_seen\":\"The Door\"}, {\"id\":2,\"firstname\":\"John\",\"lastname\":\"Snow\",\"last_seen\":\"The Iron Throne\"}]",
+          "latency": 0,
+          "status_code": 200,
+          "headers": {
+            "Content-Type": "application/json"
+          }
+        },
+        "rules": []
+      },
+      {
+        "response": {
+          "label": "search",
+          "body": "[{\"id\":1,\"firstname\":\"Hodor\",\"lastname\":\"\",\"last_seen\":\"The Door\"}]",
+          "latency": 0,
+          "status_code": 200,
+          "headers": {
+            "Content-Type": "application/json"
+          }
+        },
+        "rules": [
+          {
+            "target": "params",
+            "modifier": "query",
+            "value": "hodor"
+          }
+        ]
+      },
+      {
+        "response": {
+          "label": "no results",
+          "body": "[]",
+          "latency": 0,
+          "status_code": 200,
+          "headers": {
+            "Content-Type": "application/json"
+          }
+        },
+        "rules": [
+          {
+            "target": "params",
+            "modifier": "query",
+            "value": "arya"
+          }
+        ]
+      }
+    ]
+  }
