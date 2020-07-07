@@ -5,7 +5,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"strings"
+
+	"github.com/nqd/flat"
 
 	"github.com/gorilla/mux"
 )
@@ -93,9 +94,14 @@ func collectResources(r *http.Request) map[string]string {
 }
 
 func collectBody(r *http.Request) map[string]interface{} {
-	data := map[string]interface{}{}
+	request := map[string]interface{}{}
 
-	if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		log.Println(err)
+	}
+
+	data, err := flat.Flatten(request, nil)
+	if err != nil {
 		log.Println(err)
 	}
 
@@ -103,25 +109,14 @@ func collectBody(r *http.Request) map[string]interface{} {
 }
 
 func get(val map[string]interface{}, key string) string {
-	var (
-		result interface{}
-		keys   = strings.Split(key, ".")
-	)
+	var result interface{}
 
-	if v, ok := val[keys[0]]; ok {
+	if v, ok := val[key]; ok {
 		result = v
 	} else {
-		log.Println("key not found ", keys[0])
+		log.Println("key not found ", key)
 		return ""
 	}
 
-	if len(keys) == 1 {
-		return fmt.Sprintf("%v", result)
-	}
-
-	if subVal, ok := result.(map[string]interface{}); ok {
-		return get(subVal, strings.Join(keys[1:], "."))
-	}
-
-	return ""
+	return fmt.Sprintf("%v", result)
 }

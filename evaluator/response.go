@@ -35,38 +35,17 @@ type Response struct {
 func (r Response) construct(data collector) Response {
 	log.Println("constructing response for label: ", r.Label)
 
-	placeholder := r.parsePlaceholders()
-	resolvePlaceholder(placeholder, data)
-	return r.apply(placeholder)
-}
+	placeholders := regexp.MustCompile(`(?m)({{.+?}})`).FindAllString(r.Body, -1)
 
-func (r Response) parsePlaceholders() map[string]string {
-	result := map[string]string{}
-	var re = regexp.MustCompile(`(?m)({{.+?}})`)
-
-	for _, match := range re.FindAllString(r.Body, -1) {
-		result[match] = ""
-	}
-
-	return result
-}
-
-func (r Response) apply(placeholder map[string]string) Response {
-	for pattern, value := range placeholder {
-		m := regexp.MustCompile(pattern)
-		r.Body = m.ReplaceAllString(r.Body, value)
+	for _, placeholder := range placeholders {
+		result := resolvePlaceholder(placeholder, data)
+		r.Body = strings.Replace(r.Body, placeholder, result, 1)
 	}
 
 	return r
 }
 
-func resolvePlaceholder(placeholder map[string]string, data collector) {
-	for k, _ := range placeholder {
-		placeholder[k] = resolveTemplate(k, data)
-	}
-}
-
-func resolveTemplate(key string, data collector) string {
+func resolvePlaceholder(key string, data collector) string {
 	tokens := tokenize(key)
 
 	return resolve(tokens[0], tokens[1:], data)
