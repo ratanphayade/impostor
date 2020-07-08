@@ -7,7 +7,7 @@ import (
 	"github.com/radovskyb/watcher"
 )
 
-func initializeWatcher(path string) {
+func initializeWatcher(path string, s *server) {
 	w := watcher.New()
 	w.SetMaxEvents(1)
 	w.FilterOps(watcher.Rename, watcher.Move, watcher.Create, watcher.Write)
@@ -22,16 +22,17 @@ func initializeWatcher(path string) {
 		}
 	}()
 
-	readEventsFromWatcher(w, path)
+	readEventsFromWatcher(w, path, s)
 }
 
-func readEventsFromWatcher(w *watcher.Watcher, path string) {
+func readEventsFromWatcher(w *watcher.Watcher, path string, s *server) {
 	go func() {
 		for {
 			select {
 			case evt := <-w.Event:
 				log.Println("modified file:", evt.Name())
 				LoadMockConfig(path)
+				s.refresh()
 
 			case err := <-w.Error:
 				log.Println("error checking file change:", err)

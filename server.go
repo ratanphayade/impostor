@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/http"
@@ -58,10 +59,11 @@ type server struct {
 	app        App
 	httpServer *http.Server
 	mux        *mux.Router
-	mock       MockConfig
+	mock       *MockConfig
+	reload     chan bool
 }
 
-func NewServer(cfg map[string]App, application string, mock MockConfig) *server {
+func NewServer(cfg map[string]App, application string, mock *MockConfig) *server {
 	var (
 		listerConf App
 		ok         bool
@@ -72,9 +74,10 @@ func NewServer(cfg map[string]App, application string, mock MockConfig) *server 
 	}
 
 	return &server{
-		app:  listerConf,
-		mux:  mux.NewRouter(),
-		mock: mock,
+		app:    listerConf,
+		mock:   mock,
+		mux:    mux.NewRouter(),
+		reload: make(chan bool, 1),
 	}
 }
 
@@ -92,19 +95,35 @@ func (s *server) AttachHandlers() *server {
 	return s
 }
 
-func (s *server) refresh(route Route) {
-	// todo: refresh the route list available in the changed file
+func (s *server) refresh() {
+	s.stop()
+	s.reload <- true
 }
 
-func (s *server) Run() *server {
+func (s *server) start() *server {
+	for {
+		s.AttachHandlers().run()
+		<-s.reload
+	}
+}
+
+func (s *server) stop() {
+	if err := s.httpServer.Shutdown(context.Background()); err != nil {
+		log.Println("error: ", err)
+	}
+}
+
+func (s *server) run() *server {
 	s.httpServer = &http.Server{
 		Handler: handlers.CORS(collectCORSOptions(s.mock.CORSOptions)...)(s.mux),
 		Addr:    fmt.Sprintf("%s:%d", s.app.Host, s.app.Port),
 	}
 
-	if err := s.httpServer.ListenAndServe(); err != nil {
-		log.Fatal(err)
-	}
+	go func() {
+		if err := s.httpServer.ListenAndServe(); err != nil {
+			log.Fatal(err)
+		}
+	}()
 
 	return s
 }

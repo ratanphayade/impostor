@@ -53,11 +53,10 @@ func init() {
 }
 
 func main() {
+	srv := NewServer(Conf.Apps, *app, &Mock)
 	if *watch {
-		initializeWatcher(appMockPath)
+		initializeWatcher(appMockPath, srv)
 	}
 
-	NewServer(Conf.Apps, *app, Mock).
-		AttachHandlers().
-		Run()
+	srv.start()
 }
