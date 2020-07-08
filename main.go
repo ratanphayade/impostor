@@ -8,7 +8,7 @@ const (
 	defaultHost        = "localhost"
 	defaultPort        = 9000
 	defaultMockPath    = "test"
-	defaultConfigFile  = "config.toml"
+	defaultConfigFile  = ""
 	defaultApplication = "app"
 	defaultWatch       = false
 
