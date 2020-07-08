@@ -3,13 +3,15 @@ package main
 import (
 	"encoding/json"
 	"flag"
+	"fmt"
+	"github.com/ratanphayade/imposter/evaluator"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 	"sort"
+	"syscall"
 	"time"
-
-	"github.com/ratanphayade/imposter/evaluator"
 
 	"github.com/BurntSushi/toml"
 	"github.com/radovskyb/watcher"
@@ -58,6 +60,8 @@ var (
 	Conf        Config
 	appMockPath string
 	Mock        server.MockConfig
+	sig         chan os.Signal
+	Server      *server.Server
 )
 
 func init() {
@@ -70,6 +74,8 @@ func init() {
 
 	flag.Parse()
 
+	sig = make(chan os.Signal, 1)
+
 	appMockPath = *mockPath + "/" + *application
 	LoadConfig(*configFilePath, *host, *port)
 	LoadMockConfig(appMockPath)
@@ -80,9 +86,35 @@ func main() {
 		initializeWatcher(appMockPath)
 	}
 
-	server.NewServer(Conf.Apps, *application, Mock).
-		AttachHandlers().
-		Run()
+	Server = server.NewServer(Conf.Apps, *application, Mock).
+			AttachHandlers()
+
+	done := make(chan bool)
+
+	go func() {
+		go func() {Server.Run()}()
+		for {
+			s := <-sig
+			switch s {
+			case syscall.SIGHUP:
+				if err := Server.Shutdown(); err != nil {
+					log.Fatal(err)
+				}
+				fmt.Println("sagsgsgsgs")
+
+				sa := server.NewServer(Conf.Apps, *application , Mock).
+					AttachHandlers()
+
+				sa.Run()
+			case syscall.SIGTERM:
+				done<-true
+				return
+			}
+		}
+	}()
+
+	fmt.Println("sagaraaaa")
+	<-done
 }
 
 func LoadConfig(path string, host string, port int) {
@@ -170,6 +202,7 @@ func readEventsFromWatcher(w *watcher.Watcher, path string) {
 			case evt := <-w.Event:
 				log.Println("modified file:", evt.Name())
 				LoadMockConfig(path)
+				Server.Refresh(sig)
 
 			case err := <-w.Error:
 				log.Println("error checking file change:", err)

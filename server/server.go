@@ -1,9 +1,12 @@
 package server
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/http"
+	"os"
+	"syscall"
 	"time"
 
 	"github.com/ratanphayade/imposter/evaluator"
@@ -56,14 +59,14 @@ type Route struct {
 	Evaluators []evaluator.Evaluator `json:"evaluators"`
 }
 
-type server struct {
+type Server struct {
 	app        App
 	httpServer *http.Server
 	mux        *mux.Router
 	mock       MockConfig
 }
 
-func NewServer(cfg map[string]App, application string, mock MockConfig) *server {
+func NewServer(cfg map[string]App, application string, mock MockConfig) *Server {
 	var (
 		listerConf App
 		ok         bool
@@ -73,14 +76,14 @@ func NewServer(cfg map[string]App, application string, mock MockConfig) *server 
 		listerConf = cfg["default"]
 	}
 
-	return &server{
+	return &Server{
 		app:  listerConf,
 		mux:  mux.NewRouter(),
 		mock: mock,
 	}
 }
 
-func (s *server) AttachHandlers() *server {
+func (s *Server) AttachHandlers() *Server {
 	for _, r := range s.mock.Routes {
 		s.mux.HandleFunc(r.Endpoint, handler(r.Evaluators, s.mock.NotFound)).
 			Methods(r.Method)
@@ -91,18 +94,26 @@ func (s *server) AttachHandlers() *server {
 			http.Error(w, s.mock.NotFound.Body, http.StatusNotFound)
 		}).GetHandler()
 
-	return s
-}
-
-func (s *server) refresh(route Route) {
-	// todo: refresh the route list available in the changed file
-}
-
-func (s *server) Run() *server {
+	s.httpServer = nil
 	s.httpServer = &http.Server{
 		Handler: handlers.CORS(collectCORSOptions(s.mock.CORSOptions)...)(s.mux),
 		Addr:    fmt.Sprintf("%s:%d", s.app.Host, s.app.Port),
 	}
+
+	return s
+}
+
+func (s *Server) Refresh(sig chan os.Signal) {
+	sig<-syscall.SIGHUP
+
+	// todo: refresh the route list available in the changed file
+}
+
+func (s *Server) Shutdown() error {
+	return s.httpServer.Shutdown(context.TODO())
+}
+
+func (s *Server) Run() *Server {
 
 	if err := s.httpServer.ListenAndServe(); err != nil {
 		log.Fatal(err)

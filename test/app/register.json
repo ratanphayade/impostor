@@ -5,7 +5,7 @@
       {
         "response": {
           "label": "success",
-          "body": "{\"status\": \"registered\"}",
+          "body": "{\"status\": \"resess\"}",
           "latency": 0,
           "status_code": 200,
           "headers": {
@@ -17,7 +17,7 @@
       {
         "response": {
           "label": "failure",
-          "body": "{\"status\": \"duplicate\"}",
+          "body": "{\"status\": \"dusdte\"}",
           "latency": 0,
           "status_code": 201,
           "headers": {
