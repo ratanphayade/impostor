@@ -10,15 +10,22 @@ import (
 const (
 	ResolverGenerator = "generate"
 	ResolverCopy      = "copy"
+	ResolverCustom    = "custom"
 
 	GeneratorString = "string"
 	GeneratorInt    = "int"
+
+	CustomConstant = "constant"
 )
 
 var (
 	generator = map[string]GeneratorFunc{
-		GeneratorString: GenerateString,
-		GeneratorInt:    GenerateInt,
+		GeneratorString: generateString,
+		GeneratorInt:    generateInt,
+	}
+
+	call = map[string]callerFunc{
+		CustomConstant: callConcat,
 	}
 )
 
@@ -67,6 +74,9 @@ func resolve(key string, tokens []string, data collector) string {
 
 	case ResolverCopy:
 		return copyFrom(tokens, data)
+
+	case ResolverCustom:
+		return customCall(data, tokens)
 	}
 
 	return ""
@@ -94,6 +104,20 @@ func generate(tokens []string) string {
 		}
 
 		return gen(val)
+	}
+
+	log.Println("error: specified generator not found")
+	return ""
+}
+
+func customCall(data collector, tokens []string) string {
+	if len(tokens) < 1 {
+		log.Println("error: invalid number of arguments in call")
+		return ""
+	}
+
+	if caller, ok := call[tokens[0]]; ok {
+		return caller(data, tokens[1:]...)
 	}
 
 	return ""

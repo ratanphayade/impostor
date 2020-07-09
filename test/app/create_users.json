@@ -5,7 +5,7 @@
     {
       "response": {
         "label": "create",
-        "body": "{\"id\":\"{{ generate string 14 }}\",\"firstname\":\"{{ copy body firstname }}\",\"lastname\":\"{{ copy body lastname }}\",\"last_seen\":\"{{ copy body option.status }}\"}",
+        "body": "{\"id\":\"{{ generate string 14 }}\",\"firstname\":\"{{ copy body firstname }}\",\"lastname\":\"{{ custom constant }}\",\"last_seen\":\"{{ copy body option.status }}\"}",
         "latency": 0,
         "status_code": 201,
         "headers": {

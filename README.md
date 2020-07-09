@@ -1,4 +1,4 @@
-![inpostor](impostor.png)
+![impostor](impostor.png)
 
 # Impostor
 Impostor is a REST API simulator (Mock server) written in golang. It'll runs based on a configuration provided to simulate various use cases.

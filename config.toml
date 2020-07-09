@@ -3,3 +3,8 @@
         port      = 9000
         host      = "localhost"
         mock_path = "test"
+
+    [apps.settlements]
+        port      = 9001
+        host      = "localhost"
+        mock_path = "test"

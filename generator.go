@@ -14,7 +14,7 @@ type GeneratorFunc func(n int) string
 
 var letterRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
 
-func GenerateString(n int) string {
+func generateString(n int) string {
 	b := make([]rune, n)
 	for i := range b {
 		b[i] = letterRunes[rand.Intn(len(letterRunes))]
@@ -22,6 +22,6 @@ func GenerateString(n int) string {
 	return string(b)
 }
 
-func GenerateInt(n int) string {
+func generateInt(n int) string {
 	return fmt.Sprintf("%d", rand.Int63n(1e16))[0:n]
 }
