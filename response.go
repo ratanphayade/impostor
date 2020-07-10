@@ -3,30 +3,13 @@ package main
 import (
 	"log"
 	"regexp"
-	"strconv"
 	"strings"
 )
 
 const (
 	ResolverGenerator = "generate"
 	ResolverCopy      = "copy"
-	ResolverCustom    = "custom"
-
-	GeneratorString = "string"
-	GeneratorInt    = "int"
-
-	CustomConstant = "constant"
-)
-
-var (
-	generator = map[string]GeneratorFunc{
-		GeneratorString: generateString,
-		GeneratorInt:    generateInt,
-	}
-
-	call = map[string]callerFunc{
-		CustomConstant: callConcat,
-	}
+	ResolverCall      = "call"
 )
 
 type Response struct {
@@ -75,7 +58,7 @@ func resolve(key string, tokens []string, data collector) string {
 	case ResolverCopy:
 		return copyFrom(tokens, data)
 
-	case ResolverCustom:
+	case ResolverCall:
 		return customCall(data, tokens)
 	}
 
@@ -89,36 +72,4 @@ func copyFrom(tokens []string, data collector) string {
 	}
 
 	return data.get(tokens[0], tokens[1])
-}
-
-func generate(tokens []string) string {
-	if len(tokens) != 2 {
-		log.Println("error: invalid number of arguments in generator")
-		return ""
-	}
-
-	if gen, ok := generator[tokens[0]]; ok {
-		val, err := strconv.Atoi(tokens[1])
-		if err != nil {
-			log.Println("error: ", err)
-		}
-
-		return gen(val)
-	}
-
-	log.Println("error: specified generator not found")
-	return ""
-}
-
-func customCall(data collector, tokens []string) string {
-	if len(tokens) < 1 {
-		log.Println("error: invalid number of arguments in call")
-		return ""
-	}
-
-	if caller, ok := call[tokens[0]]; ok {
-		return caller(data, tokens[1:]...)
-	}
-
-	return ""
 }

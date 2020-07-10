@@ -25,7 +25,7 @@
         "label": "search",
         "body": "{\"id\":2,\"firstname\":\"John\",\"lastname\":\"Snow\",\"last_seen\":\"The Iron Throne\"}",
         "latency": 0,
-        "status_code": 201,
+        "status_code": 200,
         "headers": {
           "Content-Type": "application/json"
         }
