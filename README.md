@@ -14,14 +14,19 @@ $ go get -u -v github.com/ratanphayade/impostor
 ```
   -app string
     	name of the app which has to be mocked (default "app")
+      
   -config string
     	path with configuration file (default "config.toml")
+      
   -host string
     	if you run your server on a different host (default "localhost")
+      
   -mock string
     	directory where your mock configs are saved (default "test")
+      
   -port int
     	port to run the server (default 9000)
+      
   -watch
     	if true, then watch for any change in app mock config and reload
 ```
